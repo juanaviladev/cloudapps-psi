@@ -73,4 +73,13 @@ public class BookRestControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @WithMockUser(username = "admin", password = "pass", roles = {"USER", "ADMIN"})
+    public void testGivenAdminUserWhenTryToDeleteBookWhichDoesntExistThenReturnNotFoundStatus() throws Exception {
+        this.mockMvc.perform(
+                MockMvcRequestBuilders.delete(this.booksUrl + "{id}", 1000)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
 }
