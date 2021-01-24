@@ -82,4 +82,13 @@ public class BookRestControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    @WithMockUser(username = "admin", password = "pass", roles = {"USER", "ADMIN"})
+    public void testGivenAdminUserWhenTryToDeleteBookThenTheBookIsDeleted() throws Exception {
+        this.mockMvc.perform(
+                MockMvcRequestBuilders.delete(this.booksUrl + "{id}", 1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
 }
