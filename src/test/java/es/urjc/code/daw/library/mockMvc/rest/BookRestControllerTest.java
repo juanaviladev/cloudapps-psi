@@ -1,12 +1,14 @@
 package es.urjc.code.daw.library.mockMvc.rest;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import es.urjc.code.daw.library.book.Book;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -21,10 +23,13 @@ public class BookRestControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private final String booksUrl = "/api/books/";
     private Book book;
 
-    @BeforeTestClass
+    @BeforeEach
     public void init() {
         this.book = new Book("LA GUERRA DE LAS GALAXIAS",
                 "Serie de peliculas de George Lucas donde se narra la vida de los jedi");
@@ -41,16 +46,22 @@ public class BookRestControllerTest {
 
     @Test
     public void testGivenNonRegisteredUserWhenTryToAddNewBookThenReturnStatusForbidden() throws Exception {
-        String addBookUrl = "/api/books/";
-
-        Book book = new Book("LA GUERRA DE LAS GALAXIAS",
-                "Serie de peliculas de George Lucas donde se narra la vida de los jedi");
-
         this.mockMvc.perform(
-                MockMvcRequestBuilders.post(this.booksUrl, this.book)
+                MockMvcRequestBuilders.post(this.booksUrl)
+                        .content(this.objectMapper.writeValueAsString(this.book))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
+    }
 
+    @Test
+    @WithMockUser(username = "user", password = "pass", roles = {"USER"})
+    public void testGivenRegisteredUserWhenTryToAddNewBookThenTheBookIsSaved() throws Exception {
+        this.mockMvc.perform(
+                MockMvcRequestBuilders.post(this.booksUrl)
+                        .content(this.objectMapper.writeValueAsString(this.book))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title", equalTo(this.book.getTitle())));
     }
 
 }
