@@ -64,4 +64,13 @@ public class BookRestControllerTest {
                 .andExpect(jsonPath("$.title", equalTo(this.book.getTitle())));
     }
 
+    @Test
+    @WithMockUser(username = "user", password = "pass", roles = {"USER"})
+    public void testGivenRegisteredUserButNoAdminWhenTryToDeleteBookThenReturnStatusForbidden() throws Exception {
+        this.mockMvc.perform(
+                MockMvcRequestBuilders.delete(this.booksUrl + "{id}", 1000)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
 }
